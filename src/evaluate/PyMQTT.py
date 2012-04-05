@@ -61,6 +61,7 @@ class MQTTListenerFactory(ClientFactory):
 
     def FigletPublish(self, topic, message):
         if self.MYbuildProtocol != None:
+            log.msg('SEND Topic: %s, Message: %s' % (topic, message ))
             self._MQTTListener().publish(topic, message)
 
     def buildProtocol(self, addr):
@@ -72,7 +73,7 @@ class MQTTListenerFactory(ClientFactory):
         return p
 
 def PostFiglet():
-    log.msg('SEND Topic: %s, Message: %s' % (topic, message ))
+    #log.msg('SEND Topic: %s, Message: %s' % (topic, message ))
     x = random.random() *10000    
     mqttFactory.FigletPublish('tokudu/figlet', str(x))
 #===============================================================================
