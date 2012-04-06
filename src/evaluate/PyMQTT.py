@@ -55,15 +55,15 @@ class MQTTListenerFactory(ClientFactory):
         self.protocol = MQTTListener
 
     def publish(self, topic, message):
-        if self.MYbuildProtocol != MQTTListener:
+        if self.protocol != MQTTListener:
             log.msg('SEND Topic: %s, Message: %s' % (topic, message ))
-            self.protocol().publish(topic, message)
+            self.protocol.publish(topic, message)
 
     def buildProtocol(self, addr):
         p = self.protocol()
         p.factory = self
         self.protocol = p
-        log.msg("PROTO NOW")
+        log.msg("protocol build")
         return p
 
 def PostFiglet():
