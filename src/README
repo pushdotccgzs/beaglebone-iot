@@ -1,18 +1,18 @@
 beaglebone-iot
 
-Internet Of Things is heading of - the beaglebone is the right choice for a performant 
-plattform wth all neccessary tools and enough horse power to give relieable results.
+Internet Of Things is heading of - the beaglebone is the right choice for a performative 
+platform with all necessary tools and enough horse power to give reliable results.
 
-Some design decission I made:
-* droped angstrom - yes they have this neat node.js and cloud9 IDE but no python twisted
+Some design decision I made:
+* dropped angstrom - yes they have this neat node.js and cloud9 IDE but no python twisted
 * node.js is 0.4.9 actual is 0.6.x - to much changes expected in near future
 * installed ubuntu oneiric - same experience as from laptop - easier development
 * development IDE eclipse + PyDev - code completion and so on ... 
 * python twisted
 * MQTT for python twisted
-* txosc - incorparate touchOSC or similar touch interfaces
+* txosc - incorporate touchOSC or similar touch interfaces
 * py-openzwave - a bit tricky to compile - needs evluation
-* mosquitto-client for dubugging and testing - simple just works
+* mosquitto-client for debugging and testing - simple just works
 * mosquito on the server side - simple just works
 
-if node is more stable & code base is set it is for shure an interessting alternative to python twisted 
+if node is more stable & code base is set it is for shure an interesting alternative to python twisted 
