@@ -15,4 +15,11 @@ Some design decision I made:
 * mosquitto-client for debugging and testing - simple just works
 * mosquito on the server side - simple just works
 
-if node is more stable & code base is set it is for shure an interesting alternative to python twisted 
+if node is more stable & code base is set it is for shure an interesting alternative 
+to python twisted
+
+= discoveries =
+* ClientID in connect has to be uniqe otherewise the same name on the other side is 
+  kicked out - last one wins
+
+  
