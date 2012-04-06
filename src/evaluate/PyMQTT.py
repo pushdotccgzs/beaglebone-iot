@@ -53,29 +53,23 @@ class MQTTListenerFactory(ClientFactory):
     def __init__(self, service = None):
         self.service = service
         self.protocol = MQTTListener
-        self.MYbuildProtocol = None
-        
 
-    def _MQTTListener(self):
-        return self.MYbuildProtocol
-
-    def FigletPublish(self, topic, message):
-        if self.MYbuildProtocol != None:
+    def publish(self, topic, message):
+        if self.MYbuildProtocol != MQTTListener:
             log.msg('SEND Topic: %s, Message: %s' % (topic, message ))
-            self._MQTTListener().publish(topic, message)
+            self.protocol().publish(topic, message)
 
     def buildProtocol(self, addr):
-        
         p = self.protocol()
         p.factory = self
-        self.MYbuildProtocol = p
+        self.protocol = p
         log.msg("PROTO NOW")
         return p
 
 def PostFiglet():
     #log.msg('SEND Topic: %s, Message: %s' % (topic, message ))
-    x = random.random() *10000    
-    mqttFactory.FigletPublish('tokudu/figlet', str(x))
+    x = random.random()
+    mqttFactory.publish('tokudu/figlet', str(x))
 #===============================================================================
 #    mqttFactory.FigletPublish('tokudu/figlet', '''
 # ... o   o  o-o  o-O-o o-O-o      o-o                       o  o
