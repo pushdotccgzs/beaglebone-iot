@@ -1,7 +1,7 @@
 from twisted.python import log
 # from twisted.application.service import Service
 from twisted.internet import reactor
-from twisted.internet.protocol import ClientFactory
+from twisted.internet.protocol import ReconnectingClientFactory
 from twisted.internet.task import LoopingCall
 from MQTT import MQTTProtocol
 
@@ -27,6 +27,10 @@ class MQTTListener(MQTTProtocol):
             self.subscribe("#")
         else:
             log.msg('Connecting to MQTT broker failed')
+    
+    def connectionLost(self, reason):
+        log.msg('CAUGHT In The ACT: connection LOST reason: %s' % (reason))
+        
             
     def processMessages(self):
         reactor.callLater(5, self.processMessages)
@@ -36,7 +40,7 @@ class MQTTListener(MQTTProtocol):
         log.msg('RECV Topic: %s, Message: %s' % (topic, message ))
         #mqttMessageBuffer.append((topic, message))
 
-class MQTTListenerFactory(ClientFactory):
+class MQTTListenerFactory(ReconnectingClientFactory):
     #protocol = MQTTListener
     
     def __init__(self, service = None):
@@ -44,6 +48,7 @@ class MQTTListenerFactory(ClientFactory):
         self.protocol = MQTTListener
 
     def publish(self, topic, message):
+        # this is a HACK class needs to be instantiated before it could be used (happens in buildProtocol)
         if self.protocol != MQTTListener:
             #log.msg('SEND Topic: %s, Message: %s' % (topic, message ))
             self.protocol.publish(topic, message)
@@ -51,9 +56,20 @@ class MQTTListenerFactory(ClientFactory):
     def buildProtocol(self, addr):
         p = self.protocol()
         p.factory = self
+        # HACK protocol class is exchanged by instance
         self.protocol = p
         log.msg("protocol build")
         return p
+    
+    def clientConnectionLost(self, connector, reason):
+        print 'Lost connection.  Reason:', reason
+        ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
+
+    def clientConnectionFailed(self, connector, reason):
+        print 'Connection failed. Reason:', reason
+        # HACK failed instances where not tolerated, start over 
+        self.protocol = MQTTListener
+        ReconnectingClientFactory.clientConnectionFailed(self, connector, reason)
 
 def PostFiglet():
     #log.msg('SEND Topic: %s, Message: %s' % (topic, message ))
