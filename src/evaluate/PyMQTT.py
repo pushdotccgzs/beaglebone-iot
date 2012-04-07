@@ -13,7 +13,8 @@ class MQTTListener(MQTTProtocol):
 
     def connectionMade(self):
         log.msg('MQTT Connected')
-        self.connect("TwistedMQTT02", keepalive=self.pingPeriod)
+        self.clientId = "BeagleBone%i" % random.randint(1, 0xFFFF)
+        self.connect(self.clientId, keepalive=self.pingPeriod)
         # TODO: make these constants configurable
         reactor.callLater(self.pingPeriod//1000, self.pingreq)
         reactor.callLater(5, self.processMessages)
@@ -62,14 +63,19 @@ class MQTTListenerFactory(ReconnectingClientFactory):
         return p
     
     def clientConnectionLost(self, connector, reason):
-        print 'Lost connection.  Reason:', reason
+        log.msg('CAUGHT In The ACT: Lost connection.  Reason: %s' % (reason))
+        self.protocol = MQTTListener
         ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
 
     def clientConnectionFailed(self, connector, reason):
-        print 'Connection failed. Reason:', reason
+        log.msg('CAUGHT In The ACT: Connection failed. Reason: %s' % (reason))
         # HACK failed instances where not tolerated, start over 
         self.protocol = MQTTListener
         ReconnectingClientFactory.clientConnectionFailed(self, connector, reason)
+        
+    def startedConnecting(self, connector):
+        log.msg('reset reconnection delay')
+        self.resetDelay()
 
 def PostFiglet():
     #log.msg('SEND Topic: %s, Message: %s' % (topic, message ))
@@ -77,7 +83,7 @@ def PostFiglet():
     mqttFactory.publish('test/random', str(x)+' random')
 #===============================================================================
 #    mqttFactory.FigletPublish('tokudu/figlet', '''
-# ... o   o  o-o  o-O-o o-O-o      o-o                       o  o
+# ... o   o  o-o  o-O-o o-O-o      o-o                       o  oself.protocol = MQTTListener
 # ... |\ /| o   o   |     |        |                         |  |            
 # ... | O | |   |   |     |       -O- o-o o-o     o-o  o  o -o- O--o o-o o-o  
 # ... |   | o   O   |     |        |  | | |       |  | |  |  |  |  | | | |  |
