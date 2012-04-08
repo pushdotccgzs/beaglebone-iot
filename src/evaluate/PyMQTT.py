@@ -5,6 +5,7 @@ from twisted.internet.protocol import ReconnectingClientFactory
 from twisted.internet.task import LoopingCall
 from MQTT import MQTTProtocol
 
+import logging, logging.handlers
 import random
 import sys
 
@@ -20,7 +21,7 @@ class MQTTListener(MQTTProtocol):
         reactor.callLater(5, self.processMessages)
             
     def pingrespReceived(self):
-        log.msg('Ping received from MQ broker')
+        log.msg('Ping received from MQ broker', logLevel=logging.DEBUG)
         reactor.callLater(self.pingPeriod//1000, self.pingreq)
 
     def connackReceived(self, status):
@@ -30,7 +31,7 @@ class MQTTListener(MQTTProtocol):
             log.msg('Connecting to MQTT broker failed')
     
     def connectionLost(self, reason):
-        log.msg('CAUGHT In The ACT: connection LOST reason: %s' % (reason))
+        log.err('CAUGHT In The ACT: connection LOST reason: %s' % (reason))
         
             
     def processMessages(self):
@@ -38,7 +39,7 @@ class MQTTListener(MQTTProtocol):
             
     def publishReceived(self, topic, message, qos, dup, retain, messageId):
         # Received a publish on an output topic
-        log.msg('RECV Topic: %s, Message: %s' % (topic, message ))
+        log.msg('RECV Topic: %s, Message: %s' % (topic, message ), logLevel=logging.DEBUG)
         #mqttMessageBuffer.append((topic, message))
 
 class MQTTListenerFactory(ReconnectingClientFactory):
@@ -59,22 +60,22 @@ class MQTTListenerFactory(ReconnectingClientFactory):
         p.factory = self
         # HACK protocol class is exchanged by instance
         self.protocol = p
-        log.msg("protocol build")
+        log.msg("protocol build", logLevel=logging.DEBUG)
         return p
     
     def clientConnectionLost(self, connector, reason):
-        log.msg('CAUGHT In The ACT: Lost connection.  Reason: %s' % (reason))
+        log.err('CAUGHT In The ACT: Lost connection.  Reason: %s' % (reason))
         self.protocol = MQTTListener
         ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
 
     def clientConnectionFailed(self, connector, reason):
-        log.msg('CAUGHT In The ACT: Connection failed. Reason: %s' % (reason))
+        log.err('CAUGHT In The ACT: Connection failed. Reason: %s' % (reason))
         # HACK failed instances where not tolerated, start over 
         self.protocol = MQTTListener
         ReconnectingClientFactory.clientConnectionFailed(self, connector, reason)
         
     def startedConnecting(self, connector):
-        log.msg('reset reconnection delay')
+        log.msg('reset reconnection delay', logLevel=logging.DEBUG)
         self.resetDelay()
 
 def PostFiglet():
@@ -102,7 +103,7 @@ def PostFiglet():
 if __name__ == '__main__':
     # TODO
     # * twisted logging instead
-    log.startLogging(sys.stdout)  
+    log.startLogging(sys.stdout) 
     mqttFactory = MQTTListenerFactory()
     reactor.connectTCP("192.168.42.60", 1883, mqttFactory)
     #reactor.listenTCP(1025, )
