@@ -103,6 +103,7 @@ def PostFiglet():
 if __name__ == '__main__':
     # TODO
     # * twisted logging instead
+    log.loglevel = logging.ERROR
     log.startLogging(sys.stdout) 
     mqttFactory = MQTTListenerFactory()
     reactor.connectTCP("192.168.42.60", 1883, mqttFactory)
