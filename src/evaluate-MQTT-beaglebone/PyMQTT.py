@@ -3,9 +3,10 @@ from twisted.python import log
 from twisted.internet import reactor
 from twisted.internet.protocol import ReconnectingClientFactory
 from twisted.internet.task import LoopingCall
+
 from MQTT import MQTTProtocol
 
-import logging, logging.handlers
+
 import random
 import sys
 
@@ -21,7 +22,7 @@ class MQTTListener(MQTTProtocol):
         reactor.callLater(5, self.processMessages)
             
     def pingrespReceived(self):
-        log.msg('Ping received from MQ broker', logLevel=logging.DEBUG)
+        log.msg('Ping received from MQ broker', logging.DEBUG)
         reactor.callLater(self.pingPeriod//1000, self.pingreq)
 
     def connackReceived(self, status):
@@ -39,12 +40,12 @@ class MQTTListener(MQTTProtocol):
             
     def publishReceived(self, topic, message, qos, dup, retain, messageId):
         # Received a publish on an output topic
-        log.msg('RECV Topic: %s, Message: %s' % (topic, message ), logLevel=logging.DEBUG)
+        log.msg('RECV Topic: %s, Message: %s' % (topic, message ), logging.DEBUG)
         #mqttMessageBuffer.append((topic, message))
 
 class MQTTListenerFactory(ReconnectingClientFactory):
     #protocol = MQTTListener
-    
+
     def __init__(self, service = None):
         self.service = service
         self.protocol = MQTTListener
@@ -60,7 +61,7 @@ class MQTTListenerFactory(ReconnectingClientFactory):
         p.factory = self
         # HACK protocol class is exchanged by instance
         self.protocol = p
-        log.msg("protocol build", logLevel=logging.DEBUG)
+        log.msg("protocol build", logging.DEBUG)
         return p
     
     def clientConnectionLost(self, connector, reason):
@@ -72,10 +73,11 @@ class MQTTListenerFactory(ReconnectingClientFactory):
         log.err('CAUGHT In The ACT: Connection failed. Reason: %s' % (reason))
         # HACK failed instances where not tolerated, start over 
         self.protocol = MQTTListener
+        
         ReconnectingClientFactory.clientConnectionFailed(self, connector, reason)
         
     def startedConnecting(self, connector):
-        log.msg('reset reconnection delay', logLevel=logging.DEBUG)
+        log.msg('reset reconnection delay', logging.DEBUG)
         self.resetDelay()
 
 def PostFiglet():
@@ -102,12 +104,12 @@ def PostFiglet():
 
 if __name__ == '__main__':
     # TODO
-    # * twisted logging instead
-    log.loglevel = logging.ERROR
-    log.startLogging(sys.stdout) 
+    import logging
+    logging.getLogger().setLevel(logging.INFO) 
     mqttFactory = MQTTListenerFactory()
-    reactor.connectTCP("192.168.42.60", 1883, mqttFactory)
+    reactor.connectTCP("test.mosquitto.org", 1883, mqttFactory)
     #reactor.listenTCP(1025, )
     figlet = LoopingCall(PostFiglet)
     figlet.start(5)
+    
     reactor.run()
