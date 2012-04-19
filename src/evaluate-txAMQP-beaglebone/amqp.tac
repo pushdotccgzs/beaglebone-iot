@@ -20,12 +20,23 @@ from twisted.words.protocols.jabber import jid
 
 from amqp import AmqpFactory
 
+import fcntl, socket, struct
+
+def getHwAddr(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    info = fcntl.ioctl(s.fileno(), 0x8927,  struct.pack('256s', ifname[:15]))
+    return ''.join(['%02x:' % ord(char) for char in info[18:24]])[:-1]
+
+ETH0_MAC = str(getHwAddr('eth0'))
+print( ETH0_MAC )
+
+
 application = service.Application("statusbot")
 
 ##################################
 # AMQP stuff.
 ##################################
-AMQP_HOST="localhost"
+AMQP_HOST="pt-net.dyndns.org"
 AMQP_PORT=5672
 AMQP_VHOST='/'
 AMQP_USER="guest"
@@ -34,20 +45,20 @@ AMQP_PASSWORD="guest"
 AMQP_SPEC="specs/rabbitmq/amqp0-8.stripped.rabbitmq.xml"
 
 def write_message(amqp):
-    amqp.send_message(exchange="tobot", routing_key="key", msg="11111")
+    amqp.send_message(exchange="beaglebone-iot", routing_key="key." + ETH0_MAC, msg="ping")
     #amqp.send_message(exchange="testbot", routing_key="key", msg="22222")
     #amqp.send_message(exchange="testbot2", routing_key="key", msg="33333")
     #amqp.send_message(exchange="toweb", routing_key="key", msg="33333")
 
-    reactor.callLater(0.001, write_message, amqp)
+    reactor.callLater(10, write_message, amqp)
 
 def my_callback(msg):
-    # print "Callback received: ", msg
+    print "Callback received: ", msg
     pass
 
 amqp = AmqpFactory(host=AMQP_HOST, port=AMQP_PORT, vhost=AMQP_VHOST, user=AMQP_USER, password=AMQP_PASSWORD, spec_file=AMQP_SPEC)
 
-amqp.read(exchange='tobot', routing_key='key', callback=my_callback)
+amqp.read(exchange='beaglebone-iot', routing_key='key.' + ETH0_MAC, callback=my_callback)
 #amqp.read(exchange='testbot', routing_key='key', callback=my_callback)
 #amqp.read(exchange='testbot2', routing_key='key', callback=my_callback)
 #amqp.read(exchange='toweb', routing_key='key', callback=my_callback)
