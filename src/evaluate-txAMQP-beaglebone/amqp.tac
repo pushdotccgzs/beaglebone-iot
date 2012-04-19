@@ -36,7 +36,7 @@ application = service.Application("statusbot")
 ##################################
 # AMQP stuff.
 ##################################
-AMQP_HOST="pt-net.dyndns.org"
+AMQP_HOST="localhost"
 AMQP_PORT=5672
 AMQP_VHOST='/'
 AMQP_USER="guest"
@@ -45,7 +45,7 @@ AMQP_PASSWORD="guest"
 AMQP_SPEC="specs/rabbitmq/amqp0-8.stripped.rabbitmq.xml"
 
 def write_message(amqp):
-    amqp.send_message(exchange="beaglebone-iot", routing_key="key." + ETH0_MAC, msg="ping")
+    amqp.send_message(exchange="beaglebone-iot", type="topic", routing_key="key." + ETH0_MAC, msg="ping")
     #amqp.send_message(exchange="testbot", routing_key="key", msg="22222")
     #amqp.send_message(exchange="testbot2", routing_key="key", msg="33333")
     #amqp.send_message(exchange="toweb", routing_key="key", msg="33333")
@@ -58,7 +58,7 @@ def my_callback(msg):
 
 amqp = AmqpFactory(host=AMQP_HOST, port=AMQP_PORT, vhost=AMQP_VHOST, user=AMQP_USER, password=AMQP_PASSWORD, spec_file=AMQP_SPEC)
 
-amqp.read(exchange='beaglebone-iot', routing_key='key.' + ETH0_MAC, callback=my_callback)
+amqp.read(exchange='beaglebone-iot', routing_key='key.' + ETH0_MAC, callback=my_callback, type="topic")
 #amqp.read(exchange='testbot', routing_key='key', callback=my_callback)
 #amqp.read(exchange='testbot2', routing_key='key', callback=my_callback)
 #amqp.read(exchange='toweb', routing_key='key', callback=my_callback)

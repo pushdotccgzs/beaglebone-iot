@@ -67,7 +67,7 @@ class AmqpProtocol(AMQClient):
 
         # Now that the channel is open add any readers the user has specified.
         for l in self.factory.read_list:
-            self.setup_read(l[0], l[1], l[2])
+            self.setup_read(l[0], l[1], l[2], l[3])
 
         # Send any messages waiting to be sent.
         self.send()
@@ -78,11 +78,11 @@ class AmqpProtocol(AMQClient):
             self.factory.initial_deferred_fired = True
 
 
-    def read(self, exchange, routing_key, callback):
+    def read(self, exchange, routing_key, callback, type):
         """Add an exchange to the list of exchanges to read from."""
         if self.connected:
             # Connection is already up. Add the reader.
-            self.setup_read(exchange, routing_key, callback)
+            self.setup_read(exchange, routing_key, callback, type)
         else:
             # Connection is not up. _channel_open will add the reader when the
             # connection is up.
@@ -94,18 +94,18 @@ class AmqpProtocol(AMQClient):
         if self.connected:
             while len(self.factory.queued_messages) > 0:
                 m = self.factory.queued_messages.pop(0)
-                self._send_message(m[0], m[1], m[2])
+                self._send_message(m[0], m[1], m[2], m[3] )
 
 
     # Do all the work that configures a listener.
     @inlineCallbacks
-    def setup_read(self, exchange, routing_key, callback):
+    def setup_read(self, exchange, routing_key, callback, type):
         """This function does the work to read from an exchange."""
         queue = exchange # For now use the exchange name as the queue name.
         consumer_tag = exchange # Use the exchange name for the consumer tag for now.
 
         # Declare the exchange in case it doesn't exist.
-        yield self.chan.exchange_declare(exchange=exchange, type="direct", durable=True, auto_delete=False)
+        yield self.chan.exchange_declare(exchange=exchange, type=type, durable=True, auto_delete=False)
 
         # Declare the queue and bind to it.
         yield self.chan.queue_declare(queue=queue, durable=True, exclusive=False, auto_delete=False)
@@ -134,10 +134,10 @@ class AmqpProtocol(AMQClient):
 
 
     @inlineCallbacks
-    def _send_message(self, exchange, routing_key, msg):
+    def _send_message(self, exchange, type, routing_key, msg):
         """Send a single message."""
         # First declare the exchange just in case it doesn't exist.
-        yield self.chan.exchange_declare(exchange=exchange, type="direct", durable=True, auto_delete=False)
+        yield self.chan.exchange_declare(exchange=exchange, type=type, durable=True, auto_delete=False)
 
         msg = Content(msg)
         msg["delivery mode"] = 2 # 2 = persistent delivery.
@@ -215,23 +215,23 @@ class AmqpFactory(protocol.ReconnectingClientFactory):
         protocol.ReconnectingClientFactory.clientConnectionFailed(self, connector, reason)
 
 
-    def send_message(self, exchange=None, routing_key=None, msg=None):
+    def send_message(self, exchange=None, type="direct", routing_key=None, msg=None):
         """Send a message."""
         # Add the new message to the queue.
-        self.queued_messages.append((exchange, routing_key, msg))
+        self.queued_messages.append((exchange, type, routing_key, msg))
 
         # This tells the protocol to send all queued messages.
         if self.p != None:
             self.p.send()
 
 
-    def read(self, exchange=None, routing_key=None, callback=None):
+    def read(self, exchange=None, routing_key=None, callback=None, type="direct"):
         """Configure an exchange to be read from."""
         assert(exchange != None and routing_key != None and callback != None)
 
         # Add this to the read list so that we have it to re-add if we lose the connection.
-        self.read_list.append((exchange, routing_key, callback))
+        self.read_list.append((exchange, routing_key, callback, type))
 
         # Tell the protocol to read this if it is already connected.
         if self.p != None:
-            self.p.read(exchange, routing_key, callback)
+            self.p.read(exchange, routing_key, callback, type)
