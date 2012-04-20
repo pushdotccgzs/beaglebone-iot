@@ -44,24 +44,33 @@ AMQP_PASSWORD="guest"
 # Get this file out of the txamqp distribution.
 AMQP_SPEC="specs/rabbitmq/amqp0-8.stripped.rabbitmq.xml"
 
-def write_message(amqp):
-    amqp.send_message(exchange="beaglebone-iot", type="topic", routing_key="key." + ETH0_MAC, msg="ping")
-    #amqp.send_message(exchange="testbot", routing_key="key", msg="22222")
-    #amqp.send_message(exchange="testbot2", routing_key="key", msg="33333")
-    #amqp.send_message(exchange="toweb", routing_key="key", msg="33333")
+def write_ping(amqp):
+    amqp.send_message(exchange="beaglebone-iot/"+ ETH0_MAC, type="topic", routing_key="presence.ping", msg="pong")
+    reactor.callLater(10, write_ping, amqp)
 
-    reactor.callLater(10, write_message, amqp)
+def write_switch1(amqp):
+	amqp.send_message(exchange="beaglebone-iot/"+ ETH0_MAC, type="topic", routing_key="switch.1", msg="on")
+	reactor.callLater(3, write_switch1, amqp)
 
-def my_callback(msg):
-    print "Callback received: ", msg
+def write_switch2(amqp):
+    amqp.send_message(exchange="beaglebone-iot/"+ ETH0_MAC, type="topic", routing_key="switch.2", msg="off")
+    reactor.callLater(7, write_switch2, amqp)
+
+def my_callback_ping(msg):
+    print "Callback PING received: ", msg
+    pass
+
+def my_callback_switch(msg):
+    print "Callback SWITCH received: ", msg
     pass
 
 amqp = AmqpFactory(host=AMQP_HOST, port=AMQP_PORT, vhost=AMQP_VHOST, user=AMQP_USER, password=AMQP_PASSWORD, spec_file=AMQP_SPEC)
 
-amqp.read(exchange='beaglebone-iot', routing_key='key.' + ETH0_MAC, callback=my_callback, type="topic")
-#amqp.read(exchange='testbot', routing_key='key', callback=my_callback)
-#amqp.read(exchange='testbot2', routing_key='key', callback=my_callback)
-#amqp.read(exchange='toweb', routing_key='key', callback=my_callback)
+amqp.read(exchange='beaglebone-iot/'+ ETH0_MAC, type="topic", routing_key='presence.#', callback=my_callback_ping)
+amqp.read(exchange='beaglebone-iot/'+ ETH0_MAC, type="topic", routing_key='switch.#', callback=my_callback_switch)
 
-reactor.callLater(1, write_message, amqp)
+
+reactor.callLater(1, write_ping, amqp)
+reactor.callLater(1, write_switch1, amqp)
+reactor.callLater(1, write_switch2, amqp)
 

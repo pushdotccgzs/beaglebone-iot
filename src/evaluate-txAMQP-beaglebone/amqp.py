@@ -99,10 +99,10 @@ class AmqpProtocol(AMQClient):
 
     # Do all the work that configures a listener.
     @inlineCallbacks
-    def setup_read(self, exchange, routing_key, callback, type):
+    def setup_read(self, exchange, type, routing_key, callback):
         """This function does the work to read from an exchange."""
         queue = exchange # For now use the exchange name as the queue name.
-        consumer_tag = exchange # Use the exchange name for the consumer tag for now.
+        consumer_tag = routing_key # Use the exchange name for the consumer tag for now.
 
         # Declare the exchange in case it doesn't exist.
         yield self.chan.exchange_declare(exchange=exchange, type=type, durable=True, auto_delete=False)
@@ -225,13 +225,13 @@ class AmqpFactory(protocol.ReconnectingClientFactory):
             self.p.send()
 
 
-    def read(self, exchange=None, routing_key=None, callback=None, type="direct"):
+    def read(self, exchange=None, type="direct", routing_key=None, callback=None ):
         """Configure an exchange to be read from."""
         assert(exchange != None and routing_key != None and callback != None)
 
         # Add this to the read list so that we have it to re-add if we lose the connection.
-        self.read_list.append((exchange, routing_key, callback, type))
+        self.read_list.append((exchange, type, routing_key, callback))
 
         # Tell the protocol to read this if it is already connected.
         if self.p != None:
-            self.p.read(exchange, routing_key, callback, type)
+            self.p.read(exchange, type, routing_key, callback)
