@@ -45,15 +45,15 @@ AMQP_PASSWORD="guest"
 AMQP_SPEC="specs/rabbitmq/amqp0-8.stripped.rabbitmq.xml"
 
 def write_ping(amqp):
-    amqp.send_message(exchange="beaglebone-iot/"+ ETH0_MAC, type="topic", routing_key="presence.ping", msg="pong")
+    amqp.send_message(exchange="beaglebone-iot/"+ ETH0_MAC, type="fanout", routing_key="presence.ping", msg="pong")
     reactor.callLater(10, write_ping, amqp)
 
 def write_switch1(amqp):
-	amqp.send_message(exchange="beaglebone-iot/"+ ETH0_MAC, type="topic", routing_key="switch.1", msg="on")
+	amqp.send_message(exchange="beaglebone-iot/"+ ETH0_MAC, type="fanout", routing_key="switch.1", msg="on")
 	reactor.callLater(3, write_switch1, amqp)
 
 def write_switch2(amqp):
-    amqp.send_message(exchange="beaglebone-iot/"+ ETH0_MAC, type="topic", routing_key="switch.2", msg="off")
+    amqp.send_message(exchange="beaglebone-iot/"+ ETH0_MAC, type="fanout", routing_key="switch.2", msg="off")
     reactor.callLater(7, write_switch2, amqp)
 
 def my_callback_ping(msg):
@@ -63,11 +63,16 @@ def my_callback_ping(msg):
 def my_callback_switch(msg):
     print "Callback SWITCH received: ", msg
     pass
+    
+def my_callback(msg):
+    print "Callback received: ", msg
+    pass
 
 amqp = AmqpFactory(host=AMQP_HOST, port=AMQP_PORT, vhost=AMQP_VHOST, user=AMQP_USER, password=AMQP_PASSWORD, spec_file=AMQP_SPEC)
 
-amqp.read(exchange='beaglebone-iot/'+ ETH0_MAC, type="topic", routing_key='presence.#', callback=my_callback_ping)
-amqp.read(exchange='beaglebone-iot/'+ ETH0_MAC, type="topic", routing_key='switch.#', callback=my_callback_switch)
+#amqp.read(exchange='beaglebone-iot/'+ ETH0_MAC, type="fanout", routing_key='', callback=my_callback)
+amqp.read(exchange='beaglebone-iot/'+ ETH0_MAC, type="fanout", routing_key='presence.#', callback=my_callback_ping)
+amqp.read(exchange='beaglebone-iot/'+ ETH0_MAC, type="fanout", routing_key='switch.#', callback=my_callback_switch)
 
 
 reactor.callLater(1, write_ping, amqp)

@@ -22,6 +22,7 @@ from txamqp.protocol import AMQClient
 from txamqp.client import TwistedDelegate
 from txamqp.content import Content
 import txamqp
+import random
 
 
 class AmqpProtocol(AMQClient):
@@ -101,8 +102,9 @@ class AmqpProtocol(AMQClient):
     @inlineCallbacks
     def setup_read(self, exchange, type, routing_key, callback):
         """This function does the work to read from an exchange."""
-        queue = exchange # For now use the exchange name as the queue name.
-        consumer_tag = routing_key # Use the exchange name for the consumer tag for now.
+        id = random.randint(1, 0xFFFF)
+        queue = "ConsumerExchange%i-" % id + exchange # For now use the exchange name as the queue name.
+        consumer_tag =  "ConsumerTag%i-" % id + routing_key # Use the routing_key name for the consumer tag for now.
 
         # Declare the exchange in case it doesn't exist.
         yield self.chan.exchange_declare(exchange=exchange, type=type, durable=True, auto_delete=False)
