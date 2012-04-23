@@ -71,8 +71,8 @@ def my_callback(msg):
 amqp = AmqpFactory(host=AMQP_HOST, port=AMQP_PORT, vhost=AMQP_VHOST, user=AMQP_USER, password=AMQP_PASSWORD, spec_file=AMQP_SPEC)
 
 #amqp.read(exchange='beaglebone-iot/'+ ETH0_MAC, "type="topic", queue="Client01", routing_key='', callback=my_callback)
-amqp.read(exchange='beaglebone-iot/'+ ETH0_MAC, type="topic", queue="client_03", routing_key='presence.ping', callback=my_callback_ping)
-amqp.read(exchange='beaglebone-iot/'+ ETH0_MAC, type="topic", queue="client_04", routing_key='switch.#', callback=my_callback_switch)
+amqp.read(exchange='beaglebone-iot/'+ ETH0_MAC, type="topic", queue='beaglebone-iot/'+ ETH0_MAC+'/ping', routing_key='presence.ping', callback=my_callback_ping)
+amqp.read(exchange='beaglebone-iot/'+ ETH0_MAC, type="topic", queue='beaglebone-iot/'+ ETH0_MAC+'/switches', routing_key='switch.#', callback=my_callback_switch)
 
 
 reactor.callLater(1, write_ping, amqp)
