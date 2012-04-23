@@ -24,7 +24,6 @@ from txamqp.content import Content
 import txamqp
 import random
 
-
 class AmqpProtocol(AMQClient):
     """The protocol is created and destroyed each time a connection is created and lost."""
 

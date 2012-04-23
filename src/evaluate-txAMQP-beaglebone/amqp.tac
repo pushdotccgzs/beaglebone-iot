@@ -36,8 +36,8 @@ application = service.Application("statusbot")
 ##################################
 # AMQP stuff.
 ##################################
-AMQP_HOST="localhost"
-AMQP_PORT=5672
+AMQP_HOST="pt-net.dyndns.org"
+AMQP_PORT=5672 
 AMQP_VHOST='/'
 AMQP_USER="guest"
 AMQP_PASSWORD="guest"
@@ -57,15 +57,15 @@ def write_switch2(amqp):
     reactor.callLater(7, write_switch2, amqp)
 
 def my_callback_ping(msg):
-    print "Callback PING received: ", msg
+    print "Callback PING received: ", msg[3], msg[4], msg[5].body
     pass
 
 def my_callback_switch(msg):
-    print "Callback SWITCH received: ", msg
+    print "Callback SWITCH received: ",  msg[3], msg[4], msg[5].body
     pass
     
 def my_callback(msg):
-    print "Callback received: ", msg
+    print "Callback received: ",  msg[3], msg[4], msg[5].body
     pass
 
 amqp = AmqpFactory(host=AMQP_HOST, port=AMQP_PORT, vhost=AMQP_VHOST, user=AMQP_USER, password=AMQP_PASSWORD, spec_file=AMQP_SPEC)
