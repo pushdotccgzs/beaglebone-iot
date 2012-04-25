@@ -40,21 +40,21 @@ application = service.Application("statusbot")
 AMQP_HOST="localhost"
 AMQP_PORT=5672 
 AMQP_VHOST='/vcS3dDCWxcwoGaRKL2uYpvdcviv'
-AMQP_USER="umaqKrTpoaNF7UfURsm2czva4VD"
-AMQP_PASSWORD="kMRQyWDgyGo2PZeYPEBf8aibqkG"
+AMQP_USER="uDp3GPbdahahEGBev8vaEM72xJs"
+AMQP_PASSWORD="cmDvdug946QGPZvFNmSko43CSn3"
 # Get this file out of the txamqp distribution.
 AMQP_SPEC="specs/rabbitmq/amqp0-8.stripped.rabbitmq.xml"
 
 def write_ping(amqp):
-    amqp.send_message(exchange="control/", type="topic", routing_key="presence.ping", msg="pong")
+    amqp.send_message(exchange="messaging/", type="topic", routing_key="presence.ping", msg="CLIENT pong")
     reactor.callLater(10, write_ping, amqp)
 
 def write_switch1(amqp):
-	amqp.send_message(exchange="messaging/", type="topic", routing_key="switch.01", msg="on")
+	amqp.send_message(exchange="messaging/", type="topic", routing_key="switch.01", msg="CLIENT off")
 	reactor.callLater(3, write_switch1, amqp)
 
 def write_switch2(amqp):
-    amqp.send_message(exchange="messaging/", type="topic", routing_key="switch.02", msg="off")
+    amqp.send_message(exchange="messaging/", type="topic", routing_key="switch.02", msg="CLIENT on")
     reactor.callLater(7, write_switch2, amqp)
 
 def my_callback_ping(msg):
@@ -71,12 +71,12 @@ def my_callback(msg):
 
 amqp = AmqpFactory(host=AMQP_HOST, port=AMQP_PORT, vhost=AMQP_VHOST, user=AMQP_USER, password=AMQP_PASSWORD, spec_file=AMQP_SPEC)
 
-amqp.read(exchange='control/', type="topic", queue="monitor", routing_key='#', callback=my_callback)
-amqp.read(exchange='control/', type="topic", queue='control/', routing_key='presence.ping', callback=my_callback_ping)
-amqp.read(exchange='messaging/', type="topic", queue='messaging/', routing_key='switch.#', callback=my_callback_switch)
+amqp.read(exchange='messaging/', type="topic", queue="", routing_key='#', callback=my_callback)
+#amqp.read(exchange='messaging/', type="topic", queue='', routing_key='presence.ping', callback=my_callback_ping)
+#amqp.read(exchange='messaging/', type="topic", queue='', routing_key='switch.#', callback=my_callback_switch)
 
 
-reactor.callLater(1, write_ping, amqp)
-reactor.callLater(2, write_switch1, amqp)
-reactor.callLater(3, write_switch2, amqp)
+reactor.callLater(5, write_ping, amqp)
+reactor.callLater(5, write_switch1, amqp)
+reactor.callLater(5, write_switch2, amqp)
 

@@ -46,15 +46,15 @@ AMQP_PASSWORD="kMRQyWDgyGo2PZeYPEBf8aibqkG"
 AMQP_SPEC="specs/rabbitmq/amqp0-8.stripped.rabbitmq.xml"
 
 def write_ping(amqp):
-    amqp.send_message(exchange="control/", type="topic", routing_key="presence.ping", msg="pong")
+    amqp.send_message(exchange="messaging/", type="topic", routing_key="presence.ping", msg="HUB pong")
     reactor.callLater(10, write_ping, amqp)
 
 def write_switch1(amqp):
-	amqp.send_message(exchange="messaging/", type="topic", routing_key="switch.01", msg="on")
+	amqp.send_message(exchange="messaging/", type="topic", routing_key="switch.01", msg="HUB on")
 	reactor.callLater(3, write_switch1, amqp)
 
 def write_switch2(amqp):
-    amqp.send_message(exchange="messaging/", type="topic", routing_key="switch.02", msg="off")
+    amqp.send_message(exchange="messaging/", type="topic", routing_key="switch.02", msg="HUB off")
     reactor.callLater(7, write_switch2, amqp)
 
 def my_callback_ping(msg):
@@ -71,9 +71,9 @@ def my_callback(msg):
 
 amqp = AmqpFactory(host=AMQP_HOST, port=AMQP_PORT, vhost=AMQP_VHOST, user=AMQP_USER, password=AMQP_PASSWORD, spec_file=AMQP_SPEC)
 
-amqp.read(exchange='control/', type="topic", queue="monitor", routing_key='#', callback=my_callback)
-amqp.read(exchange='control/', type="topic", queue='control/', routing_key='presence.ping', callback=my_callback_ping)
-amqp.read(exchange='messaging/', type="topic", queue='messaging/', routing_key='switch.#', callback=my_callback_switch)
+amqp.read(exchange='messaging/', type="topic", queue=AMQP_USER+"_01", routing_key='#', callback=my_callback)
+amqp.read(exchange='messaging/', type="topic", queue=AMQP_USER+"_02", routing_key='presence.ping', callback=my_callback_ping)
+amqp.read(exchange='messaging/', type="topic", queue=AMQP_USER+"_03", routing_key='switch.#', callback=my_callback_switch)
 
 
 reactor.callLater(1, write_ping, amqp)
