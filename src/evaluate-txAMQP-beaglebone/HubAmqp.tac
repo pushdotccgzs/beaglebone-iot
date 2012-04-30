@@ -51,11 +51,11 @@ def write_ping(amqp):
 
 def write_switch1(amqp):
 	amqp.send_message(exchange="messaging/", type="topic", routing_key="switch.01", msg="HUB on")
-	reactor.callLater(3, write_switch1, amqp)
+	reactor.callLater(0.3, write_switch1, amqp)
 
 def write_switch2(amqp):
     amqp.send_message(exchange="messaging/", type="topic", routing_key="switch.02", msg="HUB off")
-    reactor.callLater(7, write_switch2, amqp)
+    reactor.callLater(0.7, write_switch2, amqp)
 
 def my_callback_ping(msg):
     print "Callback PING received: ", msg[3], msg[4], msg[5].body

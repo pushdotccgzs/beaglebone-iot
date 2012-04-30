@@ -20,7 +20,7 @@ from twisted.internet.defer import inlineCallbacks, Deferred
 
 from txamqp.protocol import AMQClient
 from txamqp.client import TwistedDelegate
-from txamqp.content import Content
+from txamqp.content import Content  
 import txamqp
 import random
 
@@ -102,8 +102,7 @@ class AmqpProtocol(AMQClient):
     def setup_read(self, exchange, type, queue, routing_key, callback):
         """This function does the work to read from an exchange."""
         id = str(random.randint(1, 0xFFFF))
-        queue = queue # For now use the exchange name as the queue name.
-        consumer_tag =  routing_key+id # Use the routing_key name for the consumer tag for now.
+        consumer_tag =  queue+"/"+routing_key # Use the queue + routing_key name for the consumer tag for now.
 
         # Declare the exchange in case it doesn't exist.
         yield self.chan.exchange_declare(exchange=exchange, type=type, durable=False, auto_delete=True)
@@ -170,7 +169,7 @@ class AmqpFactory(protocol.ReconnectingClientFactory):
 
 
     def __init__(self, spec_file=None, vhost=None, host=None, port=None, user=None, password=None):
-        spec_file = spec_file or 'amqp0-8.xml'
+        spec_file = spec_file or 'specs/rabbitmq/amqp0-8.stripped.rabbitmq.xml'
         self.spec = txamqp.spec.load(spec_file)
         self.user = user or 'guest'
         self.password = password or 'guest'
